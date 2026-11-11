@@ -254,7 +254,6 @@ OpenAI Codex를 사용해 문제를 구체화하고 Python 계산 엔진, 한국
 
 ## 참고자료와 출처
 
-- 사용자 제공 「소프트웨어랩(EE370) 기말 Term Project 안내」, 2026학년도 2학기: 제출물·평가기준·강의 연계 요구 사항.
 - 소프트웨어랩 3강 적분·미분, 4강 행렬, 5강 랜덤: 본 프로젝트의 강의 연계 주제. 세부 수식과 구현은 제출 코드에 명시.
 - [SciPy `cont2discrete`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.cont2discrete.html): 연속 상태공간에서 ZOH 이산화.
 - [SciPy Nelder–Mead](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-neldermead.html): 탐색 방법·경계·함수 평가 예산.
