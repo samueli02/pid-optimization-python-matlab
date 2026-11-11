@@ -16,7 +16,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from pid_core import DEFAULT_CONFIG, simulate, optimize_nelder_mead as optimize
-from app import export_result
+from pid_io import export_result
 
 ROOT = Path(__file__).resolve().parents[1]
 

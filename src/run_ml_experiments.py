@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pid_core import DEFAULT_CONFIG, optimize, optimize_nelder_mead
-from app import export_result
+from pid_io import export_result
 
 ROOT = Path(__file__).resolve().parents[1]
 

@@ -1,11 +1,39 @@
-"""머신러닝 데이터와 검증 보고서를 재현 가능한 파일로 저장합니다."""
+"""웹 앱 없이도 Python 결과, MATLAB 전달 파일, ML 보고서를 저장합니다."""
 from pathlib import Path
 import csv
 import json
 
-from pid_core import validate_config
+import numpy as np
+from scipy.io import savemat
+from pid_core import validate_config, simulate
 
 ML_FILES = ('dataset.csv', 'ml_report.json', 'optimization_history.json', 'surrogate_predictions.csv')
+BASE_EXPORTS = {"config.json", "pid_parameters.mat", "python_results.csv", "metrics.json"}
+
+
+def export_result(config, directory, optimization=None):
+    """선택한 모델·PID·시간 조건의 실제 응답과 MATLAB 입력을 저장합니다."""
+    config = validate_config(config)
+    if optimization and optimization.get('ml_report') and experiment_context(optimization['config']) != experiment_context(config):
+        raise ValueError('학습 조건이 현재 설정과 다릅니다. 다시 학습하세요.')
+    result = simulate(config)
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+    (directory / "metrics.json").write_text(json.dumps(result["metrics"], ensure_ascii=False, indent=2), encoding="utf-8")
+    with (directory / "python_results.csv").open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(["t", "y", "u", "e"])
+        writer.writerows(zip(result["t"], result["y"], result["u"], result["e"]))
+    savemat(directory / "pid_parameters.mat", {
+        "Kp": config["pid"]["kp"], "Ki": config["pid"]["ki"], "Kd": config["pid"]["kd"],
+        "Tf": config["pid"]["tf"], "num": np.array(config["plant"]["num"]),
+        "den": np.array(config["plant"]["den"]), "delay": config["plant"]["delay"],
+        "dt": config["sim"]["dt"], "horizon": config["sim"]["horizon"],
+        "setpoint": config["sim"]["setpoint"], "objective": config["objective"],
+    })
+    learning_files = export_learning(optimization, config, directory)
+    return {"directory": str(directory), "files": sorted(BASE_EXPORTS | set(learning_files)), "metrics": result["metrics"]}
 
 
 def experiment_context(config):

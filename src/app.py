@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 from pathlib import Path
 import threading
@@ -11,43 +10,20 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
-import numpy as np
-from scipy.io import savemat
 from pid_core import DEFAULT_CONFIG, validate_config, simulate, optimize
-from pid_io import ML_FILES, export_learning, experiment_context
+from pid_io import ML_FILES, BASE_EXPORTS, export_result as _export_result
 
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = Path(__file__).resolve().parent / "static"
 EXPORT = ROOT / "results" / "latest"
 JOBS = {}
 JOB_LOCK = threading.Lock()
-BASE_EXPORTS = {"config.json", "pid_parameters.mat", "python_results.csv", "metrics.json"}
 ALLOWED_EXPORTS = BASE_EXPORTS | set(ML_FILES)
 
 
 def export_result(config, directory=EXPORT, optimization=None):
-    """Export the exact selected model, numerical settings, gains and response."""
-    config = validate_config(config)
-    if optimization and optimization.get('ml_report') and experiment_context(optimization['config']) != experiment_context(config):
-        raise ValueError('학습 조건이 현재 설정과 다릅니다. 다시 학습하세요.')
-    result = simulate(config)
-    directory = Path(directory)
-    directory.mkdir(parents=True, exist_ok=True)
-    (directory / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
-    (directory / "metrics.json").write_text(json.dumps(result["metrics"], ensure_ascii=False, indent=2), encoding="utf-8")
-    with (directory / "python_results.csv").open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
-        writer.writerow(["t", "y", "u", "e"])
-        writer.writerows(zip(result["t"], result["y"], result["u"], result["e"]))
-    savemat(directory / "pid_parameters.mat", {
-        "Kp": config["pid"]["kp"], "Ki": config["pid"]["ki"], "Kd": config["pid"]["kd"],
-        "Tf": config["pid"]["tf"], "num": np.array(config["plant"]["num"]),
-        "den": np.array(config["plant"]["den"]), "delay": config["plant"]["delay"],
-        "dt": config["sim"]["dt"], "horizon": config["sim"]["horizon"],
-        "setpoint": config["sim"]["setpoint"], "objective": config["objective"],
-    })
-    learning_files = export_learning(optimization, config, directory)
-    return {"directory": str(directory), "files": sorted(BASE_EXPORTS | set(learning_files)), "metrics": result["metrics"]}
+    """기존 웹 저장 경로를 유지하며 공통 파일 저장 코드를 호출합니다."""
+    return _export_result(config, directory, optimization=optimization)
 
 
 def run_optimization(job_id, config, bounds, seed, budget):

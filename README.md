@@ -12,6 +12,8 @@
 
 모든 명령은 이 README가 있는 프로젝트 폴더에서 실행합니다. Python 3.12와 requirements.txt의 NumPy·SciPy·Matplotlib·scikit-learn(1.7 이상, 2 미만)이 필요합니다.
 
+ZIP은 전체를 압축 해제해 폴더 구조를 유지하세요. Python 계산만 별도 폴더에서 실행할 때도 `run_pid.py`, `pid_core.py`, `pid_ml.py`, `pid_io.py` 네 파일을 같은 폴더에 둬야 합니다. 이 구성에서는 `python run_pid.py`로 실행하고 결과는 그 폴더의 `results/python_to_matlab/`에 저장됩니다. `app.py`는 웹 화면용이며 Python 계산에는 필요하지 않습니다.
+
 ~~~powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
@@ -55,6 +57,7 @@ Python은 MATLAB을 자동 실행하지 않습니다. MATLAB은 JSON의 전달�
 | [src/run_pid.py](src/run_pid.py) | 전달함수 입력 → Python 학습·탐색 → MATLAB 전달 파일 저장 |
 | [src/pid_core.py](src/pid_core.py) | 오차, 적분·미분, 폐루프 응답, 목적함수, 안정성 판정 |
 | [src/pid_ml.py](src/pid_ml.py) | 데이터 생성, GP fit/predict, 다음 후보 선택, 홀드아웃 검증 |
+| [src/pid_io.py](src/pid_io.py) | Python 결과·학습 보고서·MATLAB 전달 파일 저장 |
 | [src/matlab/run_matlab_check.m](src/matlab/run_matlab_check.m) | Python 결과를 MATLAB에 적용하고 그래프 열기 |
 | [src/matlab/verify_pid.m](src/matlab/verify_pid.m) | MATLAB의 독립 응답 계산과 오차 비교 |
 

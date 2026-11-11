@@ -10,9 +10,11 @@ import json
 import sys
 
 from pid_core import DEFAULT_CONFIG, validate_config, optimize, optimize_nelder_mead
-from app import export_result
+from pid_io import export_result
 
-ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_DIR = Path(__file__).resolve().parent
+# src 폴더 구조와 Python 파일 네 개를 같은 폴더에 둔 구성 모두 지원합니다.
+ROOT = SCRIPT_DIR.parent if SCRIPT_DIR.name == "src" else SCRIPT_DIR
 
 
 def main():
@@ -68,7 +70,11 @@ def main():
         report = result["ml_report"]
         print(f"ML: {report['algorithm']}")
         print(f"Training samples: {report['training_samples']}; ML recommendations evaluated: {report['recommendations_evaluated']}")
-    print("Next: open src/matlab/run_matlab_check.m in MATLAB and click Run.")
+    matlab_launcher = ROOT / "src" / "matlab" / "run_matlab_check.m"
+    if matlab_launcher.is_file():
+        print(f"Next: open {matlab_launcher} in MATLAB and click Run.")
+    else:
+        print("MATLAB 검증에는 위 Saved 폴더의 config.json과 python_results.csv를 사용하세요.")
 
 
 if __name__ == "__main__":
