@@ -28,6 +28,7 @@ const PYTHON_SETUP = `
 import base64, csv, io, json, platform, sys
 import numpy as np
 import scipy
+import sklearn
 from scipy.io import savemat
 from js import pidProgress
 sys.path.insert(0, '/home/pyodide')
@@ -36,8 +37,54 @@ from pid_core import DEFAULT_CONFIG, validate_config, simulate, optimize
 def _browser_progress(entry):
     pidProgress(json.dumps(entry, allow_nan=False))
 
-def _browser_export(config):
+def _browser_json_file(name, value):
+    return {'name': name, 'mime': 'application/json',
+            'text': json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False)}
+
+def _browser_csv_file(name, rows, columns):
+    if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
+        raise ValueError('ML export rows must be a list of objects')
+    stream = io.StringIO(newline='')
+    writer = csv.DictWriter(stream, fieldnames=columns, extrasaction='ignore')
+    writer.writeheader()
+    writer.writerows(rows)
+    return {'name': name, 'mime': 'text/csv;charset=utf-8', 'text': stream.getvalue()}
+
+def _browser_optimization_files(config, optimization):
+    if optimization is None:
+        return []
+    if not isinstance(optimization, dict):
+        raise ValueError('ML export requires an optimization record')
+    if not optimization.get('ml_report'):
+        return []
+    if not isinstance(optimization.get('config'), dict):
+        raise ValueError('ML export requires the optimization configuration')
+    learned_config = validate_config(optimization['config'])
+    if (any(config[key] != learned_config[key] for key in ('plant', 'sim', 'objective'))
+            or config['pid']['tf'] != learned_config['pid']['tf']):
+        raise ValueError('현재 전달함수·시간 조건·목적함수가 학습 당시와 다릅니다. 다시 ML 최적화를 실행하세요.')
+    report = optimization.get('ml_report')
+    if not isinstance(report, dict):
+        raise ValueError('ML export requires a learning report')
+    report = {**report, 'experiment': {
+        'trained_best_config': optimization['config'], 'exported_config': config,
+        'seed': optimization.get('seed'), 'bounds': optimization.get('bounds'),
+        'method': optimization.get('method'),
+        'note': '학습 보고서는 최근 최적화 실행 기준이며 python_results.csv는 현재 PID 응답입니다.',
+    }}
+    return [
+        _browser_csv_file('dataset.csv', optimization.get('dataset', []),
+            ['iteration', 'kp', 'ki', 'kd', 'cost', 'raw_cost', 'stable', 'spectral_radius',
+             'phase', 'split', 'source']),
+        _browser_json_file('ml_report.json', report),
+        _browser_json_file('optimization_history.json', optimization.get('history', [])),
+        _browser_csv_file('surrogate_predictions.csv', optimization.get('surrogate_predictions', []),
+            ['kp', 'ki', 'kd', 'actual_log_cost', 'predicted_log_cost', 'predicted_std', 'stable', 'split']),
+    ]
+
+def _browser_export(config, optimization=None):
     config = validate_config(config)
+    learning_files = _browser_optimization_files(config, optimization)
     response = simulate(config)
     stream = io.StringIO(newline='')
     writer = csv.writer(stream)
@@ -61,7 +108,7 @@ def _browser_export(config):
             {'name': 'python_results.csv', 'mime': 'text/csv;charset=utf-8', 'text': stream.getvalue()},
             {'name': 'pid_parameters.mat', 'mime': 'application/octet-stream',
              'base64': base64.b64encode(mat.getvalue()).decode('ascii')},
-        ],
+        ] + learning_files,
     }
 
 def _browser_dispatch(request_json):
@@ -76,7 +123,7 @@ def _browser_dispatch(request_json):
                           seed=body.get('seed', 42), budget=body.get('budget', 180),
                           progress=_browser_progress)
     elif action == 'export':
-        result = _browser_export(body['config'])
+        result = _browser_export(body['config'], body.get('optimization'))
     else:
         raise ValueError('Unknown browser action')
     return json.dumps(result, ensure_ascii=False, allow_nan=False)
@@ -86,15 +133,20 @@ async function initialize() {
   runtime('loading', 'Python 계산 환경을 내려받는 중입니다. 첫 실행은 잠시 걸릴 수 있습니다.');
   const {loadPyodide} = await import(`${PYODIDE_BASE}pyodide.mjs`);
   pyodide = await loadPyodide({indexURL: PYODIDE_BASE});
-  runtime('packages', 'NumPy·SciPy 수치 계산 패키지를 준비하고 있습니다.');
-  await pyodide.loadPackage(['numpy', 'scipy']);
-  runtime('engine', 'PID 계산 코드를 준비하고 있습니다.');
-  const source = await fetch(new URL('./pid_core.py', self.location.href));
-  if (!source.ok) throw new Error(`PID 계산 코드 다운로드 실패 (${source.status})`);
-  pyodide.FS.writeFile('/home/pyodide/pid_core.py', await source.text(), {encoding: 'utf8'});
+  runtime('packages', 'NumPy·SciPy·scikit-learn 계산 및 머신러닝 패키지를 준비하고 있습니다.');
+  await pyodide.loadPackage(['numpy', 'scipy', 'scikit-learn']);
+  runtime('engine', 'PID 시뮬레이션과 머신러닝 코드를 준비하고 있습니다.');
+  const sources = await Promise.all(['pid_core.py', 'pid_ml.py'].map(async name => {
+    const response = await fetch(new URL(`./${name}`, self.location.href));
+    if (!response.ok) throw new Error(`${name} 다운로드 실패 (${response.status})`);
+    return {name, source: await response.text()};
+  }));
+  for (const {name, source} of sources) {
+    pyodide.FS.writeFile(`/home/pyodide/${name}`, source, {encoding: 'utf8'});
+  }
   await pyodide.runPythonAsync(PYTHON_SETUP);
-  const versions = JSON.parse(pyodide.runPython("json.dumps({'python': platform.python_version(), 'numpy': np.__version__, 'scipy': scipy.__version__})"));
-  runtime('ready', '브라우저 Python 계산 엔진 준비 완료', {versions, pyodide: PYODIDE_VERSION});
+  const versions = JSON.parse(pyodide.runPython("json.dumps({'python': platform.python_version(), 'numpy': np.__version__, 'scipy': scipy.__version__, 'scikit-learn': sklearn.__version__})"));
+  runtime('ready', '브라우저 Python·머신러닝 엔진 준비 완료', {versions, pyodide: PYODIDE_VERSION});
 }
 
 const ready = initialize();

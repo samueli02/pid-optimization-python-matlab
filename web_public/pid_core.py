@@ -3,8 +3,9 @@
 읽는 순서: DEFAULT_CONFIG → simulate → _rollout → _evaluate → optimize.
 _rollout에서는 사다리꼴 적분과 필터를 적용한 차분 미분으로 제어입력을
 계산한다. _evaluate는 응답 오차를 다시 적분해 ITAE와 ISE를 구한다.
-optimize는 이 비용을 줄이는 세 이득을 탐색한다. Nelder-Mead 탐색 자체는
-목적함수의 기울기를 사용하지 않으며, PID 미분항 계산과 구분해야 한다.
+optimize는 pid_ml의 GP 학습과 기대개선으로 세 이득을 탐색한다.
+이전 수치 탐색은 optimize_nelder_mead에 비교용으로 보존한다.
+두 탐색 모두 PID 내부의 차분 미분과 목적함수의 기울기를 구분해야 한다.
 
 플랜트는 ZOH로 이산화하고, 각 샘플 사이에는 입력을 일정하게 유지한다.
 포화·잡음은 모델에 포함하지 않았다. 안정성은 짧은 응답 그래프만 보고
@@ -322,7 +323,7 @@ def simulate(config=None):
     return _evaluate(c, _plant(c))
 
 
-def optimize(config=None, bounds=None, seed=42, budget=240, progress: Callable | None = None):
+def optimize_nelder_mead(config=None, bounds=None, seed=42, budget=240, progress: Callable | None = None):
     """정해진 범위 안에서 ITAE 또는 ISE가 작은 Kp, Ki, Kd를 찾는다.
 
     1. 현재 수동 PID를 먼저 평가해 비교 기준과 보존할 초기 해로 둔다.
@@ -422,6 +423,16 @@ def optimize(config=None, bounds=None, seed=42, budget=240, progress: Callable |
             "method": "seeded bounded multistart Nelder-Mead; original controller retained",
             "feasible_found": bool(after["metrics"]["stable"]),
             "improvement_pct": 100 * (before["metrics"]["cost"] - after["metrics"]["cost"]) / max(abs(before["metrics"]["cost"]), 1e-15)}
+
+
+def optimize(config=None, bounds=None, seed=42, budget=180, progress: Callable | None = None):
+    """입력 모델별 데이터를 새로 만들고 GP 기반 Bayesian 최적화를 실행한다.
+
+    기존 수치 계산·안정성 검사는 그대로 재사용한다. 비 ML 비교 방법은
+    optimize_nelder_mead()로 별도 보존한다. 지연 import로 순환 import를 막는다.
+    """
+    from pid_ml import optimize_ml
+    return optimize_ml(config, bounds=bounds, seed=seed, budget=budget, progress=progress)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,61 @@
+{
+  "config": {
+    "plant": {
+      "num": [
+        666.6666666666667
+      ],
+      "den": [
+        1.0,
+        24.733333333333334,
+        103.73333333333333,
+        200.0,
+        386.6666666666667,
+        266.6666666666667
+      ],
+      "delay": 0.1
+    },
+    "pid": {
+      "kp": 0.04826132584753043,
+      "ki": 0.18725998778320085,
+      "kd": 3.9905088169346205e-05,
+      "tf": 0.05
+    },
+    "sim": {
+      "dt": 0.01,
+      "horizon": 30.0,
+      "setpoint": 1.0
+    },
+    "objective": "ITAE"
+  },
+  "method": "seeded bounded multistart Nelder-Mead; original controller retained",
+  "evaluations": 179,
+  "budget": 180,
+  "seed": 42,
+  "improvement_pct": 91.1043444389608,
+  "metrics": {
+    "itae": 5.159324748517628,
+    "ise": 1.9311631585821984,
+    "overshoot_pct": 9.976432312778272,
+    "settling_time": 7.890000000000001,
+    "steady_error": 0.00021000207432808615,
+    "final_error": -0.00021000207432808615,
+    "final_output": 1.000210002074328,
+    "cost": 5.159324748517628,
+    "raw_cost": 5.159324748517628,
+    "objective": "ITAE",
+    "stable": true,
+    "spectral_radius": 0.9979132887896959,
+    "stability_method": "spectral radius of the implemented discrete augmented closed loop",
+    "stability_margin": 1e-09,
+    "simulation_valid": true,
+    "effective_delay": 0.1,
+    "requested_delay": 0.1,
+    "delay_samples": 10,
+    "effective_horizon": 30.0,
+    "settling_band_pct": 2.0,
+    "settling_definition": "last exit from the 2% band within the simulated horizon",
+    "steady_error_definition": "absolute final-sample error, not an infinite-time guarantee",
+    "peak_control": 0.4334849510767607,
+    "control_energy": 4.696663225465913
+  }
+}

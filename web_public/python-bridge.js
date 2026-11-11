@@ -110,6 +110,19 @@
     for (const value of downloads.values()) URL.revokeObjectURL(value.url);
     downloads.clear();
   }
+  function exportPayload(body) {
+    if (!body || typeof body !== 'object' || !body.config) throw new Error('내보낼 PID 설정이 필요합니다.');
+    const payload = {config: body.config};
+    if (body.optimization != null) {
+      if (typeof body.optimization !== 'object' || Array.isArray(body.optimization)) throw new Error('ML 최적화 기록을 확인할 수 없습니다.');
+      // Responses for graphing can be large; exports only need the learning record.
+      payload.optimization = {};
+      for (const key of ['config', 'dataset', 'ml_report', 'history', 'surrogate_predictions', 'seed', 'bounds', 'method']) {
+        if (Object.hasOwn(body.optimization, key)) payload.optimization[key] = body.optimization[key];
+      }
+    }
+    return payload;
+  }
   window.pidDownloadUrl = name => {
     const result = downloads.get(name);
     if (!result) throw new Error('먼저 MATLAB 검증 파일 저장을 눌러 주세요.');
@@ -141,7 +154,7 @@
       return {job_id: id};
     }
     if (route.pathname === '/api/export') {
-      const result = await rpc('export', body, {signal});
+      const result = await rpc('export', exportPayload(body), {signal});
       const prepared = [];
       for (const file of result.files) {
         const data = file.base64 === undefined ? file.text : Uint8Array.from(atob(file.base64), c => c.charCodeAt(0));
@@ -154,5 +167,5 @@
     throw new Error('지원하지 않는 요청입니다.');
   };
   window.addEventListener('beforeunload', revokeDownloads);
-  runtime({phase: 'loading', message: '브라우저 Python 계산 엔진을 준비하고 있습니다.'});
+  runtime({phase: 'loading', message: '브라우저 Python·머신러닝 엔진을 준비하고 있습니다.'});
 })();

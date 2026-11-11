@@ -14,18 +14,22 @@ from urllib.parse import urlparse, parse_qs
 import numpy as np
 from scipy.io import savemat
 from pid_core import DEFAULT_CONFIG, validate_config, simulate, optimize
+from pid_io import ML_FILES, export_learning, experiment_context
 
 ROOT = Path(__file__).resolve().parents[1]
 STATIC = Path(__file__).resolve().parent / "static"
 EXPORT = ROOT / "results" / "latest"
 JOBS = {}
 JOB_LOCK = threading.Lock()
-ALLOWED_EXPORTS = {"config.json", "pid_parameters.mat", "python_results.csv", "metrics.json"}
+BASE_EXPORTS = {"config.json", "pid_parameters.mat", "python_results.csv", "metrics.json"}
+ALLOWED_EXPORTS = BASE_EXPORTS | set(ML_FILES)
 
 
-def export_result(config, directory=EXPORT):
+def export_result(config, directory=EXPORT, optimization=None):
     """Export the exact selected model, numerical settings, gains and response."""
     config = validate_config(config)
+    if optimization and optimization.get('ml_report') and experiment_context(optimization['config']) != experiment_context(config):
+        raise ValueError('학습 조건이 현재 설정과 다릅니다. 다시 학습하세요.')
     result = simulate(config)
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
@@ -42,7 +46,8 @@ def export_result(config, directory=EXPORT):
         "dt": config["sim"]["dt"], "horizon": config["sim"]["horizon"],
         "setpoint": config["sim"]["setpoint"], "objective": config["objective"],
     })
-    return {"directory": str(directory), "files": sorted(ALLOWED_EXPORTS), "metrics": result["metrics"]}
+    learning_files = export_learning(optimization, config, directory)
+    return {"directory": str(directory), "files": sorted(BASE_EXPORTS | set(learning_files)), "metrics": result["metrics"]}
 
 
 def run_optimization(job_id, config, bounds, seed, budget):
@@ -115,7 +120,7 @@ class Handler(BaseHTTPRequestHandler):
             if route == "/api/simulate":
                 return self.send_json(simulate(validate_config(data)))
             if route == "/api/export":
-                return self.send_json(export_result(data["config"]))
+                return self.send_json(export_result(data["config"], optimization=data.get("optimization")))
             if route == "/api/optimize":
                 config = validate_config(data["config"])
                 bounds = data.get("bounds", [[0, 10], [0, 5], [0, 5]])
@@ -131,6 +136,8 @@ class Handler(BaseHTTPRequestHandler):
                 with JOB_LOCK:
                     if any(j["status"] == "running" for j in JOBS.values()):
                         return self.send_json({"error": "최적화 작업이 실행 중입니다."}, 409)
+                    while len(JOBS) >= 8:
+                        JOBS.pop(next(iter(JOBS)))
                     job_id = uuid.uuid4().hex
                     JOBS[job_id] = {"status": "running", "progress": None}
                 threading.Thread(target=run_optimization, args=(job_id, config, bounds, seed, budget), daemon=True).start()
