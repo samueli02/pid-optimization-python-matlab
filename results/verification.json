@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-11",
+  "unit_tests": "5 passed: analytical sampled response, invalid plant, incumbent retention, instability, known integral values",
+  "browser_checks": [
+    "initial response",
+    "optimization at budget 180",
+    "automatic gain application",
+    "MATLAB export",
+    "manual adjustment preserves 3-way comparison after normalization fix",
+    "ISE selection",
+    "invalid zero denominator rejected"
+  ],
+  "matlab": {
+    "metrics": {
+      "itae": 5.15932474851781,
+      "ise": 1.9311631585821982,
+      "overshoot_pct": 9.97643231277847,
+      "settling_time": 7.890000000000001,
+      "steady_error": 0.00021000207432719797,
+      "spectral_radius": 0.9979132887895928,
+      "stable": true,
+      "effective_delay": 0.1,
+      "effective_horizon": 30,
+      "delay_samples": 10,
+      "peak_control": 0.4334849510767609,
+      "cost": 5.15932474851781
+    },
+    "comparison": {
+      "python_csv_supplied": true,
+      "max_abs_t": 0,
+      "max_abs_y": 4.440892098500626e-15,
+      "max_abs_u": 8.881784197001252e-16,
+      "abs_itae_difference": 1.8030021919912542e-13,
+      "abs_ise_difference": 0,
+      "tolerance": 1e-07,
+      "passed": true
+    },
+    "method": "Base MATLAB controllable canonical form + augmented expm ZOH; explicit trapezoid/filtered-difference PID",
+    "matlab_version": "26.2.0.3433840 (R2026b) Update 1",
+    "visualizations": [
+      "matlab_python_comparison.png",
+      "matlab_python_comparison.fig"
+    ]
+  },
+  "not_completed": [
+    "student ID/name",
+    "presentation PDF (12-slide outline exists)",
+    "actual narrated video (script exists)",
+    "course submission"
+  ],
+  "github_repository_url": "https://github.com/samueli02/pid-optimization-python-matlab",
+  "github_publication_status": "published; code and experiment commits verified on remote",
+  "verified_code_and_results_commit": "8a0d3e6d10baaf033f9c743f5e043b2757789809",
+  "manual_python_matlab_workflow": {
+    "python": "src/run_pid.py --budget 180",
+    "matlab": "src/matlab/run_matlab_check.m",
+    "comparison_passed": true,
+    "max_abs_y": 4.440892098500626e-15,
+    "max_abs_u": 8.881784197001252e-16
+  }
+}
