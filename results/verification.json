@@ -57,5 +57,19 @@
     "comparison_passed": true,
     "max_abs_y": 4.440892098500626e-15,
     "max_abs_u": 8.881784197001252e-16
+  },
+  "public_web": {
+    "url": "https://samuel-pid-lab.pristinecucumber3.chatgpt.site",
+    "published_date": "2026-11-11",
+    "access": "public; no password or sign-in",
+    "runtime": "Pyodide 0.29.5 Web Worker; visitor-local Python/NumPy/SciPy",
+    "site_source_commit": "2d68edc9abed22e0d995d22eadc5f09bede22eef",
+    "browser_checks": {
+      "baseline_itae": 57.998,
+      "optimized_itae": 5.159,
+      "evaluations": 179,
+      "manual_comparison_preserved": true,
+      "mat_download_and_scipy_loadmat": "passed"
+    }
   }
 }
