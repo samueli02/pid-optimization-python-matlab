@@ -143,12 +143,8 @@ python src/app.py --port 8766 --no-browser
 
 ## 7. 제출과 출처
 
-학번·이름은 사용자가 입력해야 합니다. TP계획서_학번_이름.pdf는 2쪽 계획서이며 slides/발표구성안.md와 video/script.txt는 초안입니다. 제출용 발표자료 PDF와 실제 영상은 별도 제작이 필요합니다. 안내자료 기준 마감은 **2026-12-13 23:59**, 최종 파일명은 TP_학번_이름.zip입니다. [제출 체크리스트](etc/제출체크리스트.md)를 확인하세요.
-
 Codex로 코드·문서 초안을 작성하고 수식 대조, 자동 검사, 실제 실행과 MATLAB 독립 계산으로 검증합니다. ML 결과는 데이터 분리와 실제 예측 오차까지 확인하며 과거 수치 탐색 결과와 구분합니다. AI 사용 사실을 공개하고 실제 수정 단위로 개발 이력을 남깁니다.
 
 - [scikit-learn Gaussian Processes](https://scikit-learn.org/stable/modules/gaussian_process.html): GP 회귀와 예측 불확실성.
 - [SciPy ZOH](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.cont2discrete.html), [Nelder-Mead](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-neldermead.html).
 - [MathWorks c2d](https://www.mathworks.com/help/control/ref/dynamicsystem.c2d.html), [expm](https://www.mathworks.com/help/matlab/ref/expm.html).
-
-GP 공식 문서 확인일: 2026-11-11. 강의 원문은 제공되지 않았으므로 특정 GP 수식이나 코드를 강의에서 배웠다고 인용하지 않습니다. 계획서 재생성은 requirements-docs.txt 설치 후 src/build_plan.py의 학번·이름을 수정하고 python src/build_plan.py를 실행합니다(Windows 맑은 고딕 사용).
