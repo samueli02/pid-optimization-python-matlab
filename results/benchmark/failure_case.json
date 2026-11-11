@@ -1,0 +1,56 @@
+{
+  "config": {
+    "plant": {
+      "num": [
+        10.0
+      ],
+      "den": [
+        0.015,
+        0.371,
+        1.556,
+        3.0,
+        5.8,
+        4.0
+      ],
+      "delay": 0.1
+    },
+    "pid": {
+      "kp": 80,
+      "ki": 60,
+      "kd": 0,
+      "tf": 0.05
+    },
+    "sim": {
+      "dt": 0.01,
+      "horizon": 30.0,
+      "setpoint": 1.0
+    },
+    "objective": "ITAE"
+  },
+  "metrics": {
+    "itae": null,
+    "ise": null,
+    "overshoot_pct": null,
+    "settling_time": null,
+    "steady_error": null,
+    "final_error": null,
+    "final_output": null,
+    "cost": 1000001039898.4485,
+    "raw_cost": null,
+    "objective": "ITAE",
+    "stable": false,
+    "spectral_radius": 1.0398984484258917,
+    "stability_method": "spectral radius of the implemented discrete augmented closed loop",
+    "stability_margin": 1e-09,
+    "simulation_valid": false,
+    "effective_delay": 0.1,
+    "requested_delay": 0.1,
+    "delay_samples": 10,
+    "effective_horizon": 30.0,
+    "settling_band_pct": 2.0,
+    "settling_definition": "last exit from the 2% band within the simulated horizon",
+    "steady_error_definition": "absolute final-sample error, not an infinite-time guarantee",
+    "peak_control": null,
+    "control_energy": null
+  }
+}

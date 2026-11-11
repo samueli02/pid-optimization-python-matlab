@@ -1,0 +1,32 @@
+{
+  "metrics": {
+    "itae": 5.15932474851781,
+    "ise": 1.9311631585821982,
+    "overshoot_pct": 9.97643231277847,
+    "settling_time": 7.8900000000000006,
+    "steady_error": 0.00021000207432719797,
+    "spectral_radius": 0.99791328878959284,
+    "stable": true,
+    "effective_delay": 0.1,
+    "effective_horizon": 30,
+    "delay_samples": 10,
+    "peak_control": 0.43348495107676088,
+    "cost": 5.15932474851781
+  },
+  "comparison": {
+    "python_csv_supplied": true,
+    "max_abs_t": 0,
+    "max_abs_y": 4.4408920985006262E-15,
+    "max_abs_u": 8.8817841970012523E-16,
+    "abs_itae_difference": 1.8030021919912542E-13,
+    "abs_ise_difference": 0,
+    "tolerance": 1E-7,
+    "passed": true
+  },
+  "method": "Base MATLAB controllable canonical form + augmented expm ZOH; explicit trapezoid/filtered-difference PID",
+  "matlab_version": "26.2.0.3433840 (R2026b) Update 1",
+  "visualizations": [
+    "matlab_python_comparison.png",
+    "matlab_python_comparison.fig"
+  ]
+}
