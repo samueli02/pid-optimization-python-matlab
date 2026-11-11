@@ -1,0 +1,6 @@
+{
+  "plant": {"num": [1.0], "den": [1.0, 1.0], "delay": 0.0},
+  "pid": {"kp": 2.0, "ki": 0.0, "kd": 0.0, "tf": 0.05},
+  "sim": {"dt": 0.01, "horizon": 5.0, "setpoint": 1.0},
+  "objective": "ISE"
+}

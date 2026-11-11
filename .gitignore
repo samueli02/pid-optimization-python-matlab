@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+*.pyc
+results/latest/
+results/python_to_matlab/
+results/matlab_manual/
+*.log
